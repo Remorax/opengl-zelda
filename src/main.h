@@ -69,6 +69,8 @@ enum direction_t { DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT };
 struct bounding_box_t {
     float x;
     float y;
+    float z;
+    float length;
     float width;
     float height;
 };
@@ -78,6 +80,7 @@ bool detect_collision(bounding_box_t a, bounding_box_t b);
 extern float screen_zoom, screen_center_x, screen_center_y;
 void reset_screen();
 void createRocks();
+void showWaves();
 
 // ---- Colors ----
 extern const color_t COLOR_RED;
@@ -92,6 +95,6 @@ extern const color_t COLOR_GOLD;
 extern const color_t COLOR_VIOLET;
 extern const color_t COLOR_BROWN;
 extern const color_t COLOR_GRAY;
-
+extern const color_t COLOR_WHITE;
 
 #endif

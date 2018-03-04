@@ -9,42 +9,42 @@ Boat::Boat(float x, float y, float z, color_t color) {
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
     static const GLfloat vertex_buffer_data[] = {
-        -0.5f,-1.0f,-0.5f, //triangle 1 : begin
-        -0.5f,-1.0f, 0.5f,
-        -0.5f, 1.0f, 0.5f,//triangle 1 : end
-        0.5f, 1.0f,-0.5f, //triangle 2 : begin
-        -0.5f,-1.0f,-0.5f,
-        -0.5f, 1.0f,-0.5f, //triangle 2 : end
-        0.5f,-1.0f, 0.5f,
-        -0.5f,-1.0f,-0.5f,
-        0.5f,-1.0f,-0.5f,
-        0.5f, 1.0f,-0.5f,
-        0.5f,-1.0f,-0.5f,
-        -0.5f,-1.0f,-0.5f,
-        -0.5f,-1.0f,-0.5f,
-        -0.5f, 1.0f, 0.5f,
-        -0.5f, 1.0f,-0.5f,
-        0.5f,-1.0f, 0.5f,
-        -0.5f,-1.0f, 0.5f,
-        -0.5f,-1.0f,-0.5f,
-        -0.5f, 1.0f, 0.5f,
-        -0.5f,-1.0f, 0.5f,
-        0.5f,-1.0f, 0.5f,
-        0.5f, 1.0f, 0.5f,
-        0.5f,-1.0f,-0.5f,
-        0.5f, 1.0f,-0.5f,
-        0.5f,-1.0f,-0.5f,
-        0.5f, 1.0f, 0.5f,
-        0.5f,-1.0f, 0.5f,
-        0.5f, 1.0f, 0.5f,
-        0.5f, 1.0f,-0.5f,
-        -0.5f, 1.0f,-0.5f,
-        0.5f, 1.0f, 0.5f,
-        -0.5f, 1.0f,-0.5f,
-        -0.5f, 1.0f, 0.5f,
-        0.5f, 1.0f, 0.5f,
-        -0.5f, 1.0f, 0.5f,
-        0.5f,-1.0f, 0.5f
+        -0.5f,-0.4f,-1.0f, //triangle 1 : begin
+        -0.5f,-0.4f, 1.0f,
+        -0.5f, 0.4f, 1.0f,//triangle 1 : end
+        0.5f, 0.4f,-1.0f, //triangle 2 : begin
+        -0.5f,-0.4f,-1.0f,
+        -0.5f, 0.4f,-1.0f, //triangle 2 : end
+        0.5f,-0.4f, 1.0f,
+        -0.5f,-0.4f,-1.0f,
+        0.5f,-0.4f,-1.0f,
+        0.5f, 0.4f,-1.0f,
+        0.5f,-0.4f,-1.0f,
+        -0.5f,-0.4f,-1.0f,
+        -0.5f,-0.4f,-1.0f,
+        -0.5f, 0.4f, 1.0f,
+        -0.5f, 0.4f,-1.0f,
+        0.5f,-0.4f, 1.0f,
+        -0.5f,-0.4f, 1.0f,
+        -0.5f,-0.4f,-1.0f,
+        -0.5f, 0.4f, 1.0f,
+        -0.5f,-0.4f, 1.0f,
+        0.5f,-0.4f, 1.0f,
+        0.5f, 0.4f, 1.0f,
+        0.5f,-0.4f,-1.0f,
+        0.5f, 0.4f,-1.0f,
+        0.5f,-0.4f,-1.0f,
+        0.5f, 0.4f, 1.0f,
+        0.5f,-0.4f, 1.0f,
+        0.5f, 0.4f, 1.0f,
+        0.5f, 0.4f,-1.0f,
+        -0.5f, 0.4f,-1.0f,
+        0.5f, 0.4f, 1.0f,
+        -0.5f, 0.4f,-1.0f,
+        -0.5f, 0.4f, 1.0f,
+        0.5f, 0.4f, 1.0f,
+        -0.5f, 0.4f, 1.0f,
+        0.5f,-0.4f, 1.0f
     };
 
     this->object = create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color, GL_FILL);
@@ -74,6 +74,14 @@ void Boat::moveRight() {
     this->rotation += deltaRot;
 }
 
+void Boat::windMoveLeft(int sign) {
+    this->rotation += (sign<0)?(deltaRot/10):(deltaRot*10);
+}
+
+void Boat::windMoveRight(int sign) {
+    this->rotation += (sign<0)?(deltaRot/10):(deltaRot*10);
+}
+
 void Boat::moveAhead() {
     this->position.z -= 0.1 * cosf(this->rotation * M_PI / 180.0f);
     this->position.x -= 0.1 * sinf(this->rotation * M_PI / 180.0f);
@@ -82,4 +90,15 @@ void Boat::moveAhead() {
 void Boat::moveBehind() {
     this->position.z += 0.1 * cosf(this->rotation * M_PI / 180.0f);
     this->position.x += 0.1 * sinf(this->rotation * M_PI / 180.0f);
+}
+
+void Boat::bob(int sign) {
+    // printf("sign: %d\n", sign);
+    this->position.y += sign * 0.0003;
+}
+
+bounding_box_t Boat::bounding_box() {
+    float x = this->position.x, y = this->position.y, z =this->position.z;
+    bounding_box_t bbox = { x, y, z, 0.5, 0.4, 1.0 };
+    return bbox;
 }

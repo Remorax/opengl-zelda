@@ -12,3 +12,4 @@ const color_t COLOR_VIOLET = {186,85,211};
 const color_t COLOR_BROWN = {210,105,30};
 const color_t COLOR_DARKBROWN = {101,67,33};
 const color_t COLOR_GRAY = {105,105,105};
+const color_t COLOR_WHITE = {255,255,255};
