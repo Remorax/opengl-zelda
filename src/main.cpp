@@ -1,6 +1,7 @@
 #include "main.h"
 #include "timer.h"
-#include "ball.h"
+#include "boat.h"
+#include "sea.h"
 
 using namespace std;
 
@@ -12,10 +13,16 @@ GLFWwindow *window;
 * Customizable functions *
 **************************/
 
-Ball ball1;
+Boat boat;
+Sea sea;
+Boat rocks[25];
 
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
+float eyex, eyey, eyez, targetx, targety, targetz, normalx, normaly, normalz;
+char viewMode = 'f';
+bool changed = false;
+char prevState = 'f';
 
 Timer t60(1.0 / 60);
 
@@ -24,17 +31,57 @@ Timer t60(1.0 / 60);
 void draw() {
     // clear the color and depth in the frame buffer
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+// 
     // use the loaded shader program
     // Don't change unless you know what you are doing
     glUseProgram (programID);
 
     // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
+    eyex = boat.position.x + 5*sin(camera_rotation_angle*M_PI/180.0f);
+    // if (!zoomin &&)
+    // {
+    //     /* code */
+    // }
+    if(!changed)
+        eyey = 0;
+    eyez = boat.position.z + 5*cos(camera_rotation_angle*M_PI/180.0f);
+    targetx = boat.position.x;
+    targetz = boat.position.z;
+    targety = boat.position.y;
+    normalx = 0, normaly = 1, normalz = 0;
+
+    if (viewMode=='t'){
+        eyex = 5.0f;
+        eyey = -10.0f;
+        eyez = -5.0f;
+    }
+    else if (viewMode=='s'){
+        eyex = boat.position.x + 5*sin(camera_rotation_angle*M_PI/180.0f);
+        eyey = -10.0f;
+        eyez = boat.position.z + 5*cos(camera_rotation_angle*M_PI/180.0f);
+        normaly = -1;
+    }
+    else if (viewMode=='b'){
+        eyex = boat.position.x - 5*cos(camera_rotation_angle*M_PI/180.0f);
+        eyey = boat.position.y;
+        eyez = boat.position.z - 5*sin(camera_rotation_angle*M_PI/180.0f);
+        targetx = boat.position.x - 10;
+        targetz = boat.position.z - 10;
+    }
+    else if (viewMode=='l'){
+        double x,y;
+        // printf("%d\n", eyex);
+        glfwGetCursorPos(window, &x, &y);
+        targetx = (float)x;
+        targetz = (float)y;
+        changed = true;
+    }
+    // printf("2.%f %f %c\n", eyex,eyez, viewMode);
+    glm::vec3 eye (eyex,eyey,eyez);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target (0, 0, 0);
+    glm::vec3 target (targetx,targety,targetz);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
-    glm::vec3 up (0, 1, 0);
+    glm::vec3 up (normalx,normaly,normalz);
 
     // Compute Camera matrix (view)
     Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
@@ -51,20 +98,80 @@ void draw() {
     glm::mat4 MVP;  // MVP = Projection * View * Model
 
     // Scene render
-    ball1.draw(VP);
+    boat.draw(VP);
+    sea.draw(VP);
+    for (int i = 0; i < 25; ++i)
+        rocks[i].draw(VP);
+}
+
+void changeHeight (int sign) {
+    if(sign<0){
+        if(eyey<-0.5){
+            eyey += 0.5;
+            changed = true;
+            return;
+        }
+    }
+    else {
+        eyey -= 0.5;
+        changed = true;
+        return;
+    }
 }
 
 void tick_input(GLFWwindow *window) {
     int left  = glfwGetKey(window, GLFW_KEY_LEFT);
     int right = glfwGetKey(window, GLFW_KEY_RIGHT);
-    if (left) {
-        // Do something
+    // int space = glfwGetKey(window, GLFW_KEY_SPACE);
+    int up = glfwGetKey(window, GLFW_KEY_UP);
+    int down = glfwGetKey(window, GLFW_KEY_DOWN);
+    int skyView = glfwGetKey(window, GLFW_KEY_S);
+    int towerView = glfwGetKey(window, GLFW_KEY_T);
+    int boatView = glfwGetKey(window, GLFW_KEY_B);
+    int followView = glfwGetKey(window, GLFW_KEY_F);
+    int lmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
+    int rmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
+    // int zin 
+    if (left)
+        boat.moveLeft();
+    else if (right)
+        boat.moveRight();
+    else if(skyView)
+        viewMode = 's';
+    else if (boatView)
+        viewMode = 'b';
+    else if (followView)
+        viewMode = 'f';
+    else if (towerView)
+        viewMode = 't';
+    else if (lmb){
+        // printf("%c\n", prevState);
+        if(viewMode!='l')
+            prevState = viewMode;
+        viewMode = 'l';
     }
+    else if (rmb){
+        printf("%c\n", rmb);
+        viewMode = prevState;
+    }
+    // else if (space) {
+    //     isJump = 1;
+    //     isFall = 0;
+    //     boat.speedy = 0.1;
+    //     boat.jump();
+    // }
+    else if (up) {
+        boat.moveAhead();
+    }
+    else if (down) {
+        boat.moveBehind();
+    }
+    return;
 }
 
 void tick_elements() {
-    ball1.tick();
-    camera_rotation_angle += 1;
+    // printf("%f %f %f\n", boat.position.x, boat.position.y, boat.position.z);
+    reset_screen();
 }
 
 /* Initialize the OpenGL rendering properties */
@@ -73,7 +180,9 @@ void initGL(GLFWwindow *window, int width, int height) {
     /* Objects should be created before any other gl function and shaders */
     // Create the models
 
-    ball1       = Ball(0, 0, COLOR_RED);
+    boat       = Boat(0, 0, 0, COLOR_RED);
+    sea        = Sea(0, 2, 0, COLOR_LIGHTBLUE);
+    createRocks();
 
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
@@ -89,13 +198,18 @@ void initGL(GLFWwindow *window, int width, int height) {
 
     glEnable (GL_DEPTH_TEST);
     glDepthFunc (GL_LEQUAL);
-
-    cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
-    cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
-    cout << "VERSION: " << glGetString(GL_VERSION) << endl;
-    cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 }
 
+void createRocks()
+{
+    for (int i=0; i<25; ++i)
+    {
+        float x = -79.5 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(159)));
+        float z = -79.5 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/159));
+        rocks[i] = Boat(x,0,z,COLOR_GRAY);
+    }
+    return;
+}
 
 int main(int argc, char **argv) {
     srand(time(0));
@@ -138,5 +252,8 @@ void reset_screen() {
     float bottom = screen_center_y - 4 / screen_zoom;
     float left   = screen_center_x - 4 / screen_zoom;
     float right  = screen_center_x + 4 / screen_zoom;
-    Matrices.projection = glm::ortho(left, right, bottom, top, 0.1f, 500.0f);
+    if (viewMode=='s')
+        Matrices.projection = glm::ortho(left, right, bottom, top, 0.1f, 500.0f);
+    else
+        Matrices.projection = glm::perspective(80.0f,top/right, 0.1f, 500.0f);
 }

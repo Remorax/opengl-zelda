@@ -20,6 +20,7 @@ struct color_t {
     int b;
 };
 
+
 // nonedit.cpp
 GLFWwindow *initGLFW(int width, int height);
 GLuint     LoadShaders(const char *vertex_file_path, const char *fragment_file_path);
@@ -33,6 +34,7 @@ void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods);
 void keyboardChar(GLFWwindow *window, unsigned int key);
 void mouseButton(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void changeHeight(int sign);
 
 // other_handlers.cpp
 void error_callback(int error, const char *description);
@@ -75,11 +77,21 @@ bool detect_collision(bounding_box_t a, bounding_box_t b);
 
 extern float screen_zoom, screen_center_x, screen_center_y;
 void reset_screen();
+void createRocks();
 
 // ---- Colors ----
 extern const color_t COLOR_RED;
 extern const color_t COLOR_GREEN;
 extern const color_t COLOR_BLACK;
 extern const color_t COLOR_BACKGROUND;
+extern const color_t COLOR_DARKBLUE;
+extern const color_t COLOR_DARKBROWN;
+extern const color_t COLOR_LIGHTBLUE;
+extern const color_t COLOR_ORANGE;
+extern const color_t COLOR_GOLD;
+extern const color_t COLOR_VIOLET;
+extern const color_t COLOR_BROWN;
+extern const color_t COLOR_GRAY;
+
 
 #endif

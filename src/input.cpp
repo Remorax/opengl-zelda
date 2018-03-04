@@ -83,5 +83,16 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-    // Do something
+    if(yoffset<0){
+        // if(eyey<-0.5){
+        //     eyey += 0.5;
+        //     return;
+        // }
+        changeHeight(1);
+    }
+    else {
+        // eyey -= 0.5;
+        // return;
+        changeHeight(-1);
+    }
 }
