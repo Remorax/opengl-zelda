@@ -81,6 +81,10 @@ extern float screen_zoom, screen_center_x, screen_center_y;
 void reset_screen();
 void createRocks();
 void showWaves();
+void createBullet();
+void createEnemy1Bullet();
+void createEnemy3Bullet();
+void createBossBullet();
 
 // ---- Colors ----
 extern const color_t COLOR_RED;
@@ -93,8 +97,11 @@ extern const color_t COLOR_LIGHTBLUE;
 extern const color_t COLOR_ORANGE;
 extern const color_t COLOR_GOLD;
 extern const color_t COLOR_VIOLET;
+extern const color_t COLOR_DARKVIOLET;
 extern const color_t COLOR_BROWN;
 extern const color_t COLOR_GRAY;
 extern const color_t COLOR_WHITE;
+extern const color_t COLOR_OLIVE;
+extern const color_t COLOR_PURPLE;
 
 #endif

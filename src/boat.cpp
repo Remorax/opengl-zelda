@@ -1,14 +1,36 @@
 #include "boat.h"
 #include "main.h"
+// #include "cannon.h"
 
 Boat::Boat(float x, float y, float z, color_t color) {
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
     deltaRot = 1;
     speedVert = 0.3;
+    // Cannon cannon       = Cannon(-1, -1, -1, COLOR_GOLD);
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
     static const GLfloat vertex_buffer_data[] = {
+        0.5f, 0.4f, -1.0f,
+        -0.5f, 0.4f, -1.0f,
+        0.0f,0.4f,-2.0f,
+
+        0.0f,0.4f,-2.0f,
+        0.0f,-0.4f,-2.0f,
+        -0.5f, 0.4f, -1.0f,
+
+        -0.5f, 0.4f, -1.0f,
+        -0.5f, -0.4f,-1.0f,
+        0.0f,-0.4f,-2.0f,
+
+        0.0f,0.4f,-2.0f,
+        0.0f,-0.4f,-2.0f,
+        0.5f, 0.4f, -1.0f,
+
+        0.5f, 0.4f, -1.0f,
+        0.5f, -0.4f, -1.0f,
+        0.0f,-0.4f,-2.0f,
+
         -0.5f,-0.4f,-1.0f, //triangle 1 : begin
         -0.5f,-0.4f, 1.0f,
         -0.5f, 0.4f, 1.0f,//triangle 1 : end
@@ -44,10 +66,30 @@ Boat::Boat(float x, float y, float z, color_t color) {
         -0.5f, 0.4f, 1.0f,
         0.5f, 0.4f, 1.0f,
         -0.5f, 0.4f, 1.0f,
-        0.5f,-0.4f, 1.0f
+        0.5f,-0.4f, 1.0f,
+
+        0.5f, 0.4f, 1.0f,
+        -0.5f, 0.4f, 1.0f,
+        0.0f,0.4f,2.0f,
+
+        0.0f,0.4f,2.0f,
+        0.0f,-0.4f,2.0f,
+        -0.5f, 0.4f, 1.0f,
+
+        -0.5f, 0.4f, 1.0f,
+        -0.5f, -0.4f, 1.0f,
+        0.0f,-0.4f,2.0f,
+
+        0.0f,0.4f,2.0f,
+        0.0f,-0.4f,2.0f,
+        0.5f, 0.4f, 1.0f,
+
+        0.5f, 0.4f, 1.0f,
+        0.5f, -0.4f, 1.0f,
+        0.0f,-0.4f,2.0f,        
     };
 
-    this->object = create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color, GL_FILL);
+    this->object = create3DObject(GL_TRIANGLES, 22*3, vertex_buffer_data, color, GL_FILL);
 }
 
 void Boat::draw(glm::mat4 VP) {

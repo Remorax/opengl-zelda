@@ -13,3 +13,6 @@ const color_t COLOR_BROWN = {210,105,30};
 const color_t COLOR_DARKBROWN = {101,67,33};
 const color_t COLOR_GRAY = {105,105,105};
 const color_t COLOR_WHITE = {255,255,255};
+const color_t COLOR_OLIVE = {51,51,0};
+const color_t COLOR_DARKVIOLET = {51,0,102};
+const color_t COLOR_PURPLE = {51,0,25};

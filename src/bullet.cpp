@@ -1,24 +1,25 @@
-#include "healthBars.h"
+#include "bullet.h"
 #include "main.h"
 
-HealthBars::HealthBars(float x, float y, float z, color_t color) {
+Bullet::Bullet(float x, float y, float z, int scale, color_t color) {
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
+    this->scale = scale;
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
     static const GLfloat vertex_buffer_data[] = {
-        -0.2, -0.5, 0.1,
-        0.2, -0.5, 0.1,
-        0.2,  0.5, 0.1,
-        0.2,  0.5, 0.1,
-        -0.2,  0.5, 0.1,
-        -0.2, -0.5, 0.1
+        -0.3*scale, -0.3*scale, 0.3*scale,
+        0.3*scale, -0.3*scale, 0.3*scale,
+        0.3*scale,  0.3*scale, 0.3*scale,
+        0.3*scale,  0.3*scale, 0.3*scale,
+        -0.3*scale,  0.3*scale, 0.3*scale,
+        -0.3*scale, -0.3*scale, 0.3*scale
     };
 
     this->object = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color, GL_FILL);
 }
 
-void HealthBars::draw(glm::mat4 VP) {
+void Bullet::draw(glm::mat4 VP) {
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
@@ -30,6 +31,19 @@ void HealthBars::draw(glm::mat4 VP) {
     draw3DObject(this->object);
 }
 
-void HealthBars::set_position(float x, float y) {
+void Bullet::set_position(float x, float y) {
     this->position = glm::vec3(x, y, 0);
+}
+
+void Bullet::shoot(glm::vec3 vec) {
+    // printf("saksajsa\n");
+    this->position += vec;
+    return;
+}
+
+bounding_box_t Bullet::bounding_box() {
+    float x = this->position.x, y = this->position.y, z =this->position.z;
+    int scale = this->scale;
+    bounding_box_t bbox = { x, y, z, 0.3*scale, 0.3*scale, 0.3*scale };
+    return bbox;
 }
