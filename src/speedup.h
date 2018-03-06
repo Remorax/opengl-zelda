@@ -1,20 +1,21 @@
 #include "main.h"
 
-#ifndef HEALTH_H
-#define HEALTH_H
+#ifndef SPEEDUP_H
+#define SPEEDUP_H
 
 
-class Health {
+class Speedup {
 public:
-    Health() {}
-    Health(float x, float y, float z, color_t color);
+    Speedup() {}
+    Speedup(float x, float y, float z, color_t color);
     glm::vec3 position;
     float rotation;
-    int chances;
+    int chances, deltaRot;
     void draw(glm::mat4 VP);
     void set_position(float x, float y);
     bounding_box_t bounding_box();
+private:
     VAO *object;
 };
 
-#endif // WAVES_H
+#endif // BALL_H

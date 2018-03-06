@@ -16,6 +16,8 @@
 #include "boss.h"
 #include "cylinder.h"
 #include "health.h"
+#include "speedup.h"
+#include "coin.h"
 
 using namespace std;
 
@@ -34,12 +36,16 @@ Waves f,m,r;
 Waves wind1, wind2, wind3, wind4, wind5, wind6;
 Sails sails;
 vector <HealthBars> healthBars(20);
+vector <HealthBars> coinBars(10);
 Target target1;
 Bullet bullet, bossBullet;
 Cannon cannon;
 Boss boss;
-Health health;
-Cylinder cylinder;
+Speedup speedup[4];
+Coin coins[4];
+Health health[4];
+int healthSecs[4], speedupSecs[4], coinSecs[4];
+Cylinder cylinder[4], cylinders[4], cylinderc[4];
 vector <Enemy1> enemy1s(10);
 vector <Enemy2> enemy2s(30);
 vector <Enemy3> enemy3s(4);
@@ -53,7 +59,7 @@ char viewMode = 'f';
 bool changed = false, gameover=false;
 bool still = true, deleteEnemy=false, fired=false, firedEnemy1 = false, firedEnemy3 = false;
 int stillMode = 20, createdBoss = false;
-int frame=0, duration=-1, angle=0, count=0, count2=0, count3=0;
+int frame=0, duration=-1, angle=0, count=0, count2=0, count3=0, isJump=0, isFall=0, speedupCount = -1, coinBarsSize=0;
 char prevState = 'f';
 float tempx=0,tempy=0,tempz=0;
 bool isBoss = false, firedBoss;
@@ -155,7 +161,11 @@ void draw() {
         healthBars[i].position.z = boat.position.z - 4;
         healthBars[i].position.x = boat.position.x - 0.7*i;
     }
-
+    for (int i = 0; i < coinBarsSize; ++i)
+    {
+        coinBars[i].position.z = boat.position.z - 4;
+        coinBars[i].position.x = boat.position.x + 10 - 0.7*i;
+    }
     if(frame%60==0 && !firedEnemy3){
         createEnemy3Bullet();
         glm::vec3 v = glm::vec3(0.0f,1.0f,20.0f);
@@ -217,9 +227,36 @@ void draw() {
     
     // Scene render
     boat.draw(VP);
-    cylinder.draw(VP);
-    health.draw(VP);
-    health.rotation += 1;   
+    for (int i=0; i<4; ++i){
+        if (healthSecs[i]==-1){
+            health[i].draw(VP);
+            health[i].rotation++;
+        }
+        else
+            healthSecs[i]--;
+        cylinder[i].draw(VP);
+    }
+
+    for (int i=0; i<4; ++i){
+        if (speedupSecs[i]==-1){
+            speedup[i].draw(VP);
+            speedup[i].rotation++;
+        }
+        else
+            speedupSecs[i]--;
+        cylinders[i].draw(VP);
+    }
+
+    for (int i=0; i<4; ++i){
+        if (coinSecs[i]==-1){
+            coins[i].draw(VP);
+            coins[i].rotation++;
+        }
+        else
+            coinSecs[i]--;
+        cylinderc[i].draw(VP);
+    }
+
     sea.draw(VP);
     if(enemy3s.size()<2 && enemy1s.size()<5){
     // if(1){
@@ -272,7 +309,7 @@ void draw() {
         if (detect_collision(boat.bounding_box(), bossBullet.bounding_box())){
             for (int i = 0; i < 5; ++i){
                 // printf("healthBars.size: %d\n", healthBars.size());
-                healthBars.pop_back();                
+                healthBars.pop_back();   
                 if(healthBars.size()==0){
                     gameover = true;
                     return;
@@ -392,10 +429,69 @@ void draw() {
                 enemy3s.erase(enemy3s.begin()+i);
         }
     }
+    for (int i=0; i<4; ++i)
+    {
+        if (detect_collision(boat.bounding_box(), health[i].bounding_box()) && healthSecs[i]==-1){
+            for (int j = 0; j < 2; ++j)
+            {
+                HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
+                healthBars.push_back(h);
+            }
+            printf("%d\n", health[i].chances);
+            if (health[i].chances<=0){
+                printf("yes\n");
+                healthSecs[i] = 480;
+            }
+            health[i].chances--;
+        }
+    }
+    
+    for (int i=0; i<4; ++i)
+    {
+        if (detect_collision(boat.bounding_box(), speedup[i].bounding_box()) && speedupSecs[i]==-1){
+            
+            // printf("%d\n", health[i].chances);
+            speedupCount = 600;
+            if (speedup[i].chances<=0)
+                speedupSecs[i] = 900;
+            speedup[i].chances--;
+        }
+    }
+
+    for (int i=0; i<4; ++i)
+    {
+        // printf("yeah\n");
+        if (detect_collision(boat.bounding_box(), coins[i].bounding_box()) && coinSecs[i]==-1){
+            HealthBars c = HealthBars(boat.position.x-4-(coinBarsSize-1)*0.2,-13,boat.position.z+4,COLOR_YELLOW);
+            coinBars[coinBarsSize] = c;
+            coinBarsSize++;
+            printf("yeah %d\n", coinBarsSize);
+            if (coinBarsSize>=4){
+                coinBars.clear();
+                coinBarsSize = 0;
+                HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
+                healthBars.push_back(h);
+                // coinBars[coinBarsSize] = h;
+            }
+
+            printf("%d\n", coins[i].chances);
+
+            if (coins[i].chances<=0){
+                // printf("yes\n");
+                coinSecs[i] = 480;
+            }
+            coins[i].chances--;
+            printf("ywa\n");
+        }
+        // printf("omago\n");
+    }
     for (int i = 0; i < 25; ++i)
         rocks[i].draw(VP);
     for (int i=0; i<healthBars.size(); ++i)
         healthBars[i].draw(VP);
+    printf("%d\n", coinBarsSize);
+    for (int i=0; i<coinBarsSize; ++i)
+        coinBars[i].draw(VP);
 }
 
 void changeHeight (int sign) {
@@ -460,6 +556,11 @@ void tick_input(GLFWwindow *window) {
         createBullet();
         fired = true;
     }
+    else if(space) {
+        isJump = 1;
+        isFall = 0;
+        boat.jump();
+    }
     else if(skyView)
         viewMode = 's';
     else if (boatView)
@@ -479,11 +580,21 @@ void tick_input(GLFWwindow *window) {
     }
     else if (up) {
         still = false;
-        boat.moveAhead();
+        if(speedupCount==-1)
+            boat.moveAhead();
+        else{
+            speedupCount--;
+            boat.speedMoveAhead();
+        }
     }
     else if (down) {
         still = false;
-        boat.moveBehind();
+        if(speedupCount==-1)
+            boat.moveBehind();
+        else{
+            speedupCount--;
+            boat.speedMoveBehind();
+        }
     }
     return;
 }
@@ -517,7 +628,19 @@ void tick_elements() {
     // cannon.position.y = boat.position.y-0.7;
     // cannon.position.z = boat.position.z+1   ;
     // cannon.rotation = boat.rotation;
-
+    if(isJump==1){
+        isJump = boat.jump();
+        if (isJump==0)
+            isFall = 1;
+    }
+    else if (isFall==1){
+        isFall = boat.fall();
+        if (isFall==0){
+            boat.position.y=0;
+            isJump=0;
+            boat.speedy = 0.1;
+        }
+    }
 }
 
 
@@ -582,6 +705,42 @@ void createEnemy3Bullet() {
     }
 }
 
+void createHealth() {
+    for (int i=0; i<4; ++i)
+        healthSecs[i] = -1;
+    for (int i=0; i<4; ++i) {
+        float x = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+        float y = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+        health[i]     = Health(x, -1, y, COLOR_RED);
+        cylinder[i]   = Cylinder(x, 1.5, y, 1, COLOR_BLACK);
+    }
+    return;
+}
+
+void createSpeedup() {
+    for (int i=0; i<4; ++i)
+        speedupSecs[i] = -1;
+    for (int i=0; i<4; ++i) {
+        float x = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+        float y = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+        speedup[i]     = Speedup(x, -1, y, COLOR_YELLOW);
+        cylinders[i]   = Cylinder(x, 1.5, y, 1, COLOR_BLACK);
+    }
+    return;
+}
+
+void createCoins(){
+    for (int i=0; i<4; ++i)
+        coinSecs[i] = -1;
+    for (int i=0; i<4; ++i) {
+        float x = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+        float y = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+        coins[i]     = Coin(x, -1.0f, y, 1.0f, COLOR_BRONZE);
+        cylinderc[i]   = Cylinder(x, 1.5, y, 1, COLOR_BLACK);
+    }
+    return;    
+}
+
 /* Initialize the OpenGL rendering properties */
 /* Add all the models to be created here */
 void initGL(GLFWwindow *window, int width, int height) {
@@ -591,15 +750,16 @@ void initGL(GLFWwindow *window, int width, int height) {
     boat       = Boat(0, 0, 0, COLOR_DARKBROWN);
     // cannon       = Cannon(-1, -1, -1, COLOR_GOLD);
     sea        = Sea(0, 2, 0, COLOR_LIGHTBLUE);
-    cylinder   = Cylinder(-5, 1.5, -5, 1, COLOR_BLACK);
-    health     = Health(-5, -1, -5, COLOR_RED);
+    createHealth();
+    createSpeedup();
+    createCoins();
     // enemy1     = Enemy1(-10, 0, -10, COLOR_VIOLET);
     createBullet();
     createEnemy1s();
     createEnemy2s();
     createEnemy3s();
     // createEnemy1Bullet();
-    target1     = Target(0, -2, 0, 0.5f, COLOR_RED);
+    target1     = Target(0, -3, 0, 0.5f, COLOR_RED);
     f = Waves(-1, 1, 0, COLOR_DARKBLUE);
     r = Waves(1, 1, 0, COLOR_DARKBLUE);
     m = Waves(0, 1, 1, COLOR_DARKBLUE);

@@ -7,6 +7,7 @@ Boat::Boat(float x, float y, float z, color_t color) {
     this->rotation = 0;
     deltaRot = 1;
     speedVert = 0.3;
+    speedy = 0.1;
     // Cannon cannon       = Cannon(-1, -1, -1, COLOR_GOLD);
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
@@ -132,6 +133,39 @@ void Boat::moveAhead() {
 void Boat::moveBehind() {
     this->position.z += 0.1 * cosf(this->rotation * M_PI / 180.0f);
     this->position.x += 0.1 * sinf(this->rotation * M_PI / 180.0f);
+}
+
+void Boat::speedMoveAhead() {
+    this->position.z -= cosf(this->rotation * M_PI / 180.0f);
+    this->position.x -= sinf(this->rotation * M_PI / 180.0f);   
+}
+
+void Boat::speedMoveBehind() {
+    this->position.z += cosf(this->rotation * M_PI / 180.0f);
+    this->position.x += sinf(this->rotation * M_PI / 180.0f);   
+}
+
+int Boat::jump() {
+    if (speedy<0){
+        speedy *= -1;
+        return 0;
+    }
+    this->position.y -= speedy;
+    speedy -= 0.02;
+    if (speedy<=0){
+        speedy *= -1;
+        return 0;
+    }
+    return 1;
+}
+
+int Boat::fall() {
+    this->position.y += speedy;
+    speedy += 0.02;
+    if (this->position.y>=0){
+        return 0;
+    }
+    return 1;
 }
 
 void Boat::bob(int sign) {

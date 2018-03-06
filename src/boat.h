@@ -9,7 +9,7 @@ public:
     Boat() {}
     Boat(float x, float y, float z, color_t color);
     glm::vec3 position;
-    float rotation, speedHor, speedVert, deltaRot;
+    float rotation, speedHor, speedVert, deltaRot, speedy;
     void draw(glm::mat4 VP);
     void set_position(float x, float y);
     void moveLeft();
@@ -18,7 +18,11 @@ public:
     void windMoveRight(int sign);
     void moveAhead();
     void moveBehind();
+    void speedMoveAhead();
+    void speedMoveBehind();
     void bob(int sign);
+    int  jump();
+    int  fall();
     bounding_box_t bounding_box();
     double speed;
 private:
