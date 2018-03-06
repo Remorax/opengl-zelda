@@ -85,6 +85,7 @@ void createBullet();
 void createEnemy1Bullet();
 void createEnemy3Bullet();
 void createBossBullet();
+void addCoinsToBar();
 
 // ---- Colors ----
 extern const color_t COLOR_RED;
