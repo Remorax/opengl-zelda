@@ -18,6 +18,8 @@
 #include "health.h"
 #include "speedup.h"
 #include "coin.h"
+#include "man.h"
+#include "island.h"
 
 using namespace std;
 
@@ -41,9 +43,11 @@ Target target1;
 Bullet bullet, bossBullet;
 Cannon cannon;
 Boss boss;
-Speedup speedup[4], bossSpeedup;
+Island island;
+Man man;
+Speedup speedup[4], bossSpeedup, iSpeed;
 Coin coins[4];
-Health health[4];
+Health health[4], greeniHeart;
 int healthSecs[4], speedupSecs[4], coinSecs[4];
 Cylinder cylinder[4], cylinders[4], cylinderc[4];
 vector <Enemy1> enemy1s(10);
@@ -52,19 +56,20 @@ vector <Enemy3> enemy3s(4);
 vector <Bullet> enemy1Bullets(10);
 vector <Bullet> enemy3Bullets(8);
 vector <Coin> enemy1coins(10);
+vector <Coin> iCoins(6);
 vector <Health> enemy3health(4);
-
+vector <Health> rediHeart(3);
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
 float eyex, eyey, eyez, targetx, targety, targetz, normalx, normaly, normalz;
 char viewMode = 'f';
-bool changed = false, gameover=false;
+bool changed = false, gameover=false, isGreenHeart=true;
 bool still = true, deleteEnemy=false, fired=false, firedEnemy1 = false, firedEnemy3 = false;
 int stillMode = 20, createdBoss = false, enemy1coinsSize = 0, enemy3healthSize=0;
 int frame=0, duration=-1, angle=0, count=0, count2=0, count3=0, isJump=0, isFall=0, speedupCount = -1, coinBarsSize=0;
 char prevState = 'f';
 float tempx=0,tempy=0,tempz=0;
-bool isBoss = false, firedBoss=false, bossDestroyed=false;
+bool isBoss = false, firedBoss=false, bossDestroyed=false, speedupTaken=false;
 
 Timer t60(1.0 / 60);
 
@@ -124,6 +129,14 @@ void draw() {
         targetz = (float)y;
         changed = true;
     }
+    else if (viewMode=='m'){
+        eyex = man.position.x + 5*sin(camera_rotation_angle*M_PI/180.0f);
+        eyey = man.position.y;
+        eyez = man.position.z + 5*cos(camera_rotation_angle*M_PI/180.0f);
+        targetx = man.position.x;
+        targetz = man.position.z;
+        targety = man.position.y;
+    }
     glm::vec3 eye (eyex,eyey,eyez);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
     glm::vec3 target (targetx,targety,targetz);
@@ -160,13 +173,28 @@ void draw() {
             stillMode = 20;
     }
     for (int i = 0; i < healthBars.size(); ++i){
-        healthBars[i].position.z = boat.position.z - 4;
-        healthBars[i].position.x = boat.position.x - 0.7*i;
+        if (viewMode!='m')
+        {
+            healthBars[i].position.z = boat.position.z - 4;
+            healthBars[i].position.x = boat.position.x - 0.7*i;
+        }
+        else{
+            healthBars[i].position.z = man.position.z - 4;
+            healthBars[i].position.y = man.position.y - 13;
+        healthBars[i].position.x = man.position.x - 0.7*i;
+        }
+
     }
     for (int i = 0; i < coinBarsSize; ++i)
     {
-        coinBars[i].position.z = boat.position.z - 4;
-        coinBars[i].position.x = boat.position.x + 10 - 0.7*i;
+        if (viewMode!='m'){
+            coinBars[i].position.z = boat.position.z - 4;
+            coinBars[i].position.x = boat.position.x + 10 - 0.7*i;
+        }
+        else {  
+            coinBars[i].position.z = man.position.z - 4;
+            coinBars[i].position.x = man.position.x + 10 - 0.7*i;
+        }
     }
     if(frame%60==0 && !firedEnemy3){
         createEnemy3Bullet();
@@ -239,6 +267,14 @@ void draw() {
         cylinder[i].draw(VP);
     }
 
+    for (int i=0; i<rediHeart.size(); ++i){
+        rediHeart[i].rotation++;
+    }
+
+    for (int i=0; i<iCoins.size(); ++i){
+        iCoins[i].rotation++;
+    }
+
     for (int i=0; i<4; ++i){
         if (speedupSecs[i]==-1){
             speedup[i].draw(VP);
@@ -260,6 +296,7 @@ void draw() {
     }
 
     sea.draw(VP);
+    island.draw(VP);
     if(enemy3s.size()<2 && enemy1s.size()<5 && !bossDestroyed){
         isBoss = true;
         // printf("yes\n");
@@ -307,7 +344,24 @@ void draw() {
                 return;
             }
         }
+        if (detect_collision(man.bounding_box(), boss.bounding_box()) && viewMode=='m'){
+            healthBars.pop_back();
+            if(healthBars.size()==0){
+                gameover = true;
+                return;
+            }
+        }
         if (detect_collision(boat.bounding_box(), bossBullet.bounding_box())){
+            for (int i = 0; i < 5; ++i){
+                // printf("healthBars.size: %d\n", healthBars.size());
+                healthBars.pop_back();   
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+        }
+        if (detect_collision(man.bounding_box(), bossBullet.bounding_box()) && viewMode=='m'){
             for (int i = 0; i < 5; ++i){
                 // printf("healthBars.size: %d\n", healthBars.size());
                 healthBars.pop_back();   
@@ -327,6 +381,7 @@ void draw() {
                 // return;
             }
         }
+
     }
     // cannon.draw(VP);
     for (int i=0; i<enemy1s.size(); ++i)
@@ -353,154 +408,263 @@ void draw() {
         wind5.draw(VP);
         wind6.draw(VP);
     }
-    for (int i = 0; i < 25; ++i) {
-        if (detect_collision(boat.bounding_box(), rocks[i].bounding_box())){
-            boat.moveBehind();
-            healthBars.pop_back();
-            if(healthBars.size()==0){
-                gameover = true;
-                return;
-            }
-        }
-    }
-    for (int i = 0; i < enemy1Bullets.size(); ++i) {
-        if (detect_collision(boat.bounding_box(), enemy1Bullets[i].bounding_box())){
-            for (int i=0; i<2; ++i) {
-                healthBars.pop_back();
-                if(healthBars.size()==0){
-                    gameover = true;
-                    return;
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < enemy3Bullets.size(); ++i) {
-        if (detect_collision(boat.bounding_box(), enemy3Bullets[i].bounding_box())){
-            for (int i=0; i<3; ++i) {
-                healthBars.pop_back();
-                if(healthBars.size()==0){
-                    gameover = true;
-                    return;
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < enemy1s.size(); ++i) {
-        if (detect_collision(boat.bounding_box(), enemy1s[i].bounding_box())){
-            healthBars.pop_back();
-            if(healthBars.size()==0){
-                gameover = true;
-                return;
-            }
-        }
-        if (detect_collision(enemy1s[i].bounding_box(), bullet.bounding_box())){
-            enemy1s[i].lives--;
-            printf("Enemy 1 lost one life\n");
-            if(enemy1s[i].lives==0){
-                enemy1coins[enemy1coinsSize++] = Coin(enemy1s[i].position.x, -1.0, enemy1s[i].position.z, 1.0f, COLOR_BRONZE);
-                enemy1s.erase(enemy1s.begin()+i);
-            }
-        }
-    }
-
-    for (int i = 0; i < enemy2s.size(); ++i) {
-        if (detect_collision(boat.bounding_box(), enemy2s[i].bounding_box())){
-            healthBars.pop_back();
-            if(healthBars.size()==0){
-                gameover = true;
-                return;
-            }
-        }
-        if (detect_collision(enemy2s[i].bounding_box(), bullet.bounding_box())){
-            printf("Enemy 2 died\n");
-            enemy2s[i].lives--;
-            if(enemy2s[i].lives==0)
-                enemy2s.erase(enemy2s.begin()+i);
-        }
-    }
-
-    for (int i = 0; i < enemy3s.size(); ++i) {
-        if (detect_collision(boat.bounding_box(), enemy3s[i].bounding_box())){
-            healthBars.pop_back();
-            if(healthBars.size()==0){
-                gameover = true;
-                return;
-            }
-        }
-        if (detect_collision(enemy3s[i].bounding_box(), bullet.bounding_box())){
-            printf("Enemy 3 lost one life\n");
-            enemy3s[i].lives--;
-            if(enemy3s[i].lives==0){
-                enemy3health[enemy3healthSize++] = Health(enemy3s[i].position.x, -1.0, enemy3s[i].position.z, COLOR_RED);
-                enemy3s.erase(enemy3s.begin()+i);
-            }
-        }
-    }
-    for (int i=0; i<4; ++i)
+    if (viewMode!='m')
     {
-        if (detect_collision(boat.bounding_box(), health[i].bounding_box()) && healthSecs[i]==-1){
-            for (int j = 0; j < 2; ++j)
-            {
+        for (int i = 0; i < 25; ++i) {
+            if (detect_collision(boat.bounding_box(), rocks[i].bounding_box())){
+                boat.moveBehind();
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+        }
+        for (int i = 0; i < enemy1Bullets.size(); ++i) {
+            if (detect_collision(boat.bounding_box(), enemy1Bullets[i].bounding_box())){
+                for (int i=0; i<2; ++i) {
+                    healthBars.pop_back();
+                    if(healthBars.size()==0){
+                        gameover = true;
+                        return;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < enemy3Bullets.size(); ++i) {
+            if (detect_collision(boat.bounding_box(), enemy3Bullets[i].bounding_box())){
+                for (int i=0; i<3; ++i) {
+                    healthBars.pop_back();
+                    if(healthBars.size()==0){
+                        gameover = true;
+                        return;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < enemy1s.size(); ++i) {
+            if (detect_collision(boat.bounding_box(), enemy1s[i].bounding_box())){
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+            if (detect_collision(enemy1s[i].bounding_box(), bullet.bounding_box())){
+                enemy1s[i].lives--;
+                printf("Enemy 1 lost one life\n");
+                if(enemy1s[i].lives==0){
+                    enemy1coins[enemy1coinsSize++] = Coin(enemy1s[i].position.x, -1.0, enemy1s[i].position.z, 1.0f, COLOR_BRONZE);
+                    enemy1s.erase(enemy1s.begin()+i);
+                }
+            }
+        }
+
+        for (int i = 0; i < enemy2s.size(); ++i) {
+            if (detect_collision(boat.bounding_box(), enemy2s[i].bounding_box())){
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+            if (detect_collision(enemy2s[i].bounding_box(), bullet.bounding_box())){
+                printf("Enemy 2 died\n");
+                enemy2s[i].lives--;
+                if(enemy2s[i].lives==0)
+                    enemy2s.erase(enemy2s.begin()+i);
+            }
+        }
+
+        for (int i = 0; i < enemy3s.size(); ++i) {
+            if (detect_collision(boat.bounding_box(), enemy3s[i].bounding_box())){
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+            if (detect_collision(enemy3s[i].bounding_box(), bullet.bounding_box())){
+                printf("Enemy 3 lost one life\n");
+                enemy3s[i].lives--;
+                if(enemy3s[i].lives==0){
+                    enemy3health[enemy3healthSize++] = Health(enemy3s[i].position.x, -1.0, enemy3s[i].position.z, COLOR_RED);
+                    enemy3s.erase(enemy3s.begin()+i);
+                }
+            }
+        }
+        for (int i=0; i<4; ++i)
+        {
+            if (detect_collision(boat.bounding_box(), health[i].bounding_box()) && healthSecs[i]==-1){
+                for (int j = 0; j < 2; ++j)
+                {
+                    HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
+                    healthBars.push_back(h);
+                }
+                if (health[i].chances<=0){
+                    healthSecs[i] = 480;
+                }
+                health[i].chances--;
+            }
+        }
+        
+        for (int i=0; i<4; ++i)
+        {
+            if (detect_collision(boat.bounding_box(), speedup[i].bounding_box()) && speedupSecs[i]==-1){
+                
+                // printf("%d\n", health[i].chances);
+                speedupCount = 600;
+                if (speedup[i].chances<=0)
+                    speedupSecs[i] = 900;
+                speedup[i].chances--;
+            }
+        }
+
+        for (int i=0; i<4; ++i)
+        {
+            if (detect_collision(boat.bounding_box(), coins[i].bounding_box()) && coinSecs[i]==-1){
+                addCoinsToBar();
+                if (coins[i].chances<=0)
+                    coinSecs[i] = 480;
+                coins[i].chances--;
+            }
+        }
+        
+        for (int i = 0; i < enemy1coinsSize; ++i)
+            enemy1coins[i].draw(VP);
+        for (int i = 0; i < enemy1coinsSize; ++i)
+        {
+            if (detect_collision(boat.bounding_box(), enemy1coins[i].bounding_box())){
+                addCoinsToBar();
+                enemy1coins.erase(enemy1coins.begin()+i);
+                enemy1coinsSize--;
+            }
+        }
+        
+        for (int i = 0; i < enemy3healthSize; ++i)
+            enemy3health[i].draw(VP);
+        for (int i = 0; i < enemy3healthSize; ++i)
+        {
+            if (detect_collision(boat.bounding_box(), enemy3health[i].bounding_box())){
                 HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
                 healthBars.push_back(h);
+                enemy3health.erase(enemy3health.begin()+i);
+                enemy3healthSize--;
             }
-            if (health[i].chances<=0){
-                healthSecs[i] = 480;
+        }
+        if(bossDestroyed){
+            bossSpeedup.draw(VP);
+            if (detect_collision(boat.bounding_box(), bossSpeedup.bounding_box())){
+                speedupCount= 1800;
             }
-            health[i].chances--;
         }
     }
-    
-    for (int i=0; i<4; ++i)
-    {
-        if (detect_collision(boat.bounding_box(), speedup[i].bounding_box()) && speedupSecs[i]==-1){
-            
-            // printf("%d\n", health[i].chances);
-            speedupCount = 600;
-            if (speedup[i].chances<=0)
-                speedupSecs[i] = 900;
-            speedup[i].chances--;
+    else {
+        for (int i = 0; i < 25; ++i) {
+            if (detect_collision(man.bounding_box(), rocks[i].bounding_box())){
+                man.moveBehind();
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
         }
-    }
+        for (int i = 0; i < enemy1Bullets.size(); ++i) {
+            if (detect_collision(man.bounding_box(), enemy1Bullets[i].bounding_box())){
+                for (int i=0; i<2; ++i) {
+                    healthBars.pop_back();
+                    if(healthBars.size()==0){
+                        gameover = true;
+                        return;
+                    }
+                }
+            }
+        }
 
-    for (int i=0; i<4; ++i)
-    {
-        if (detect_collision(boat.bounding_box(), coins[i].bounding_box()) && coinSecs[i]==-1){
-            addCoinsToBar();
-            if (coins[i].chances<=0)
-                coinSecs[i] = 480;
-            coins[i].chances--;
+        for (int i = 0; i < enemy3Bullets.size(); ++i) {
+            if (detect_collision(man.bounding_box(), enemy3Bullets[i].bounding_box())){
+                for (int i=0; i<3; ++i) {
+                    healthBars.pop_back();
+                    if(healthBars.size()==0){
+                        gameover = true;
+                        return;
+                    }
+                }
+            }
         }
-    }
-    
-    for (int i = 0; i < enemy1coinsSize; ++i)
-        enemy1coins[i].draw(VP);
-    for (int i = 0; i < enemy1coinsSize; ++i)
-    {
-        if (detect_collision(boat.bounding_box(), enemy1coins[i].bounding_box())){
-            addCoinsToBar();
-            enemy1coins.erase(enemy1coins.begin()+i);
-            enemy1coinsSize--;
+
+        for (int i = 0; i < enemy1s.size(); ++i) {
+            if (detect_collision(man.bounding_box(), enemy1s[i].bounding_box())){
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+            if (detect_collision(enemy1s[i].bounding_box(), bullet.bounding_box())){
+                enemy1s[i].lives--;
+                printf("Enemy 1 lost one life\n");
+                if(enemy1s[i].lives==0){
+                    enemy1coins[enemy1coinsSize++] = Coin(enemy1s[i].position.x, -1.0, enemy1s[i].position.z, 1.0f, COLOR_BRONZE);
+                    enemy1s.erase(enemy1s.begin()+i);
+                }
+            }
         }
-    }
-    
-    for (int i = 0; i < enemy3healthSize; ++i)
-        enemy3health[i].draw(VP);
-    for (int i = 0; i < enemy3healthSize; ++i)
-    {
-        if (detect_collision(boat.bounding_box(), enemy3health[i].bounding_box())){
-            HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
-            healthBars.push_back(h);
-            enemy3health.erase(enemy3health.begin()+i);
-            enemy3healthSize--;
+
+        for (int i = 0; i < enemy2s.size(); ++i) {
+            if (detect_collision(man.bounding_box(), enemy2s[i].bounding_box())){
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+            if (detect_collision(enemy2s[i].bounding_box(), bullet.bounding_box())){
+                printf("Enemy 2 died\n");
+                enemy2s[i].lives--;
+                if(enemy2s[i].lives==0)
+                    enemy2s.erase(enemy2s.begin()+i);
+            }
         }
-    }
-    if(bossDestroyed){
-        bossSpeedup.draw(VP);
-        if (detect_collision(boat.bounding_box(), bossSpeedup.bounding_box())){
-            speedupCount= 1800;
+
+        for (int i = 0; i < enemy3s.size(); ++i) {
+            if (detect_collision(man.bounding_box(), enemy3s[i].bounding_box())){
+                healthBars.pop_back();
+                if(healthBars.size()==0){
+                    gameover = true;
+                    return;
+                }
+            }
+            if (detect_collision(enemy3s[i].bounding_box(), bullet.bounding_box())){
+                printf("Enemy 3 lost one life\n");
+                enemy3s[i].lives--;
+                if(enemy3s[i].lives==0){
+                    enemy3health[enemy3healthSize++] = Health(enemy3s[i].position.x, -1.0, enemy3s[i].position.z, COLOR_RED);
+                    enemy3s.erase(enemy3s.begin()+i);
+                }
+            }
+        }
+        for (int i = 0; i < rediHeart.size(); ++i)
+        {
+            if (detect_collision(man.bounding_box(), rediHeart[i].bounding_box())){
+                HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
+                healthBars.push_back(h);
+                rediHeart.erase(rediHeart.begin()+i);
+            }
+        }
+        for (int i = 0; i < iCoins.size(); ++i)
+        {
+            if (detect_collision(man.bounding_box(), iCoins[i].bounding_box())){
+                addCoinsToBar();
+                iCoins.erase(iCoins.begin()+i);
+            }
+        }
+        if (detect_collision(man.bounding_box(), iSpeed.bounding_box()) && !speedupTaken){
+            speedupCount= 1200;
+            speedupTaken = true;
         }
     }
     for (int i = 0; i < 25; ++i)
@@ -510,6 +674,31 @@ void draw() {
     // printf("%d\n", coinBarsSize);
     for (int i=0; i<coinBarsSize; ++i)
         coinBars[i].draw(VP);
+    man.draw(VP);
+    island.draw(VP);
+    for (int i=0; i<rediHeart.size(); ++i){
+        rediHeart[i].draw(VP);
+    }
+    for (int i=0; i<iCoins.size(); ++i){
+        iCoins[i].draw(VP);
+    }
+    if(!speedupTaken)
+        iSpeed.draw(VP);
+
+    if(!isGreenHeart){
+        createIsland();
+        isGreenHeart = true;   
+    }
+    if(speedupTaken && rediHeart.size()==0 && iCoins.size()==0 &&isGreenHeart){
+        if (detect_collision(man.bounding_box(), greeniHeart.bounding_box())){
+            for(int t=healthBars.size();t<=20;t++){
+                HealthBars h = HealthBars(-4+(healthBars.size()-1)*0.2,-13,-4,COLOR_WHITE);
+                healthBars.push_back(h);
+            }
+            isGreenHeart = false;
+        }
+        greeniHeart.draw(VP);
+    }
 }
 
 void addCoinsToBar(){
@@ -563,6 +752,13 @@ void tick_input(GLFWwindow *window) {
     int boatView = glfwGetKey(window, GLFW_KEY_B);
     int followView = glfwGetKey(window, GLFW_KEY_N);
     int fire = glfwGetKey(window, GLFW_KEY_F);
+    int manAhead = glfwGetKey(window, GLFW_KEY_W);
+    int manBehind = glfwGetKey(window, GLFW_KEY_S);
+    int manLeft = glfwGetKey(window, GLFW_KEY_A);
+    int manRight = glfwGetKey(window, GLFW_KEY_D);
+    int manUp = glfwGetKey(window, GLFW_KEY_Z); 
+    int manDown = glfwGetKey(window, GLFW_KEY_X); 
+    int manView = glfwGetKey(window, GLFW_KEY_M);
     int lmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
     int rmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
     // int zin
@@ -586,6 +782,37 @@ void tick_input(GLFWwindow *window) {
     else if (fire) {
         createBullet();
         fired = true;
+    }
+    else if (manView) {
+        viewMode = 'm';
+    }
+    else if(manAhead){
+        man.moveAhead();
+        viewMode = 'm';
+    }
+    else if (manBehind){
+        man.moveBehind();
+        viewMode = 'm';
+    }
+    else if(manUp) {
+        man.moveUp();
+        viewMode = 'm';
+        // isMoving = true;
+    }
+    else if (manDown) {
+        man.moveDown();
+        viewMode = 'm';
+        // isMoving = true;
+    }
+    else if (manLeft) {
+        man.moveLeft();
+        viewMode = 'm';
+        // isMoving = true;
+    }
+    else if (manRight) {
+        man.moveRight();
+        viewMode = 'm';
+        // isMoving = true;
     }
     else if(space) {
         isJump = 1;
@@ -651,6 +878,11 @@ void tick_elements() {
         showWind();
     }
 
+    if (viewMode!='m')
+    {
+        man.position.x = boat.position.x, man.position.z = boat.position.z;
+        man.rotation = boat.rotation;
+    }
     double x,y;
     glfwGetCursorPos(window, &x, &y);
     target1.position.x = boat.position.x + 13 - (float)((26*x)/600.0f);
@@ -772,6 +1004,45 @@ void createCoins(){
     return;    
 }
 
+void createGreeniHeart(float x, float y) {
+    float theta = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(360)));
+    float r=    0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(10)));
+    greeniHeart = Health(x+r*cosf(theta*M_PI/180.0f), -3, y+r*sinf(theta*M_PI/180.0f), COLOR_GREEN);
+    return;
+}
+
+void createRediHeart(float x, float y){
+    for (int i=0; i<rediHeart.size(); ++i){
+        float r = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(10)));
+        float theta = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(360)));
+        rediHeart[i]= Health(x+r*cosf(theta*M_PI/180.0f), -3, y+r*sinf(theta*M_PI/180.0f), COLOR_RED);
+    }
+}
+
+void createiCoins(float x, float y){
+    for (int i=0; i<iCoins.size(); ++i){
+        float r = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(10)));
+        float theta = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(360)));
+        iCoins[i]= Coin(x+r*cosf(theta*M_PI/180.0f), -3, y+r*sinf(theta*M_PI/180.0f), 1.0f, COLOR_BRONZE);
+    }
+}
+
+void createiSpeedup(float x, float y) {
+    float r = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(10)));
+    float theta = 0 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(360)));
+    iSpeed = Speedup(x+r*cosf(theta*M_PI/180.0f), -3, y+r*sinf(theta), COLOR_YELLOW);
+}
+
+void createIsland() {
+    float x = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+    float y = (rand()%2==0)?(30 + static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50)))):(-30 - static_cast <float> (rand()) /(static_cast <float> (RAND_MAX/(50))));
+    island = Island(x, 0, y, 10.0f, COLOR_DARKGREEN);
+    createGreeniHeart(x,y);
+    createiCoins(x,y);
+    createRediHeart(x,y);
+    createiSpeedup(x,y);
+}
+
 /* Initialize the OpenGL rendering properties */
 /* Add all the models to be created here */
 void initGL(GLFWwindow *window, int width, int height) {
@@ -789,8 +1060,10 @@ void initGL(GLFWwindow *window, int width, int height) {
     createEnemy1s();
     createEnemy2s();
     createEnemy3s();
+    createIsland();
     // createEnemy1Bullet();
     target1     = Target(0, -3, 0, 0.5f, COLOR_RED);
+    man = Man(0, -3, 0, COLOR_GREEN);
     f = Waves(-1, 1, 0, COLOR_DARKBLUE);
     r = Waves(1, 1, 0, COLOR_DARKBLUE);
     m = Waves(0, 1, 1, COLOR_DARKBLUE);

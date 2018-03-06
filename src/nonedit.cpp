@@ -124,7 +124,7 @@ GLuint LoadShaders(const char *vertex_file_path, const char *fragment_file_path)
     glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     std::vector<char> FragmentShaderErrorMessage(InfoLogLength);
     glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-    // fprintf(stdout,              "%s/\n", &FragmentShaderErrorMessage[0]);
+    // fprintf(stdout,              "%s\/n", &FragmentShaderErrorMessage[0]);
 
     // Link the program
     // fprintf(stdout, "Linking program\n");

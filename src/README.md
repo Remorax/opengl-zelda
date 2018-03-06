@@ -18,14 +18,16 @@ The game consists of a boat, and three types of enemies and a boss who appears w
 2. Sky cam: Top view of boat. Activate by pressing s.
 3. Tower cam: Tower view of boat. Activate by pressing t.
 4. Follow cam: Cam which follows the boat. Default view. Revert by pressing n.
-5. Helicopter cam: 
+5. Man cam: Cam which follows man when he walks. Activate by pressing m. Activating another view while in man view takes the man back to the boat.  
+6. Helicopter cam: 
     a. Click and drag: Activate by pressing LMB. Gives a target view of the environment. Deactivate by pressing RMB.
     b. Scroll: Scroll up and down to zoom in and out.
 
 ## Collectibles
-1. Coins: Fills the coin bar by one. Dropped by level 2 enemy. Also available over barrels.
-2. Health: Restores one health bar for the player. Dropped by level 3 enemy. Also available over barrels.
-3. Speedup: Speeds up the boat movement in up and down directions 10x times. Dropped by boss. Also available over barrels.
+1. Coins: Fills the coin bar by one. Dropped by level 2 enemy. Also available over barrels and on the island.
+2. Health: Restores one health bar for the player. Dropped by level 3 enemy. Also available over barrels and on the island.
+3. Speedup: Speeds up the boat movement in up and down directions 10x times. Dropped by boss. Also available over barrels and on the island.
+4. Green Health: Restores health completely. Found on the island after collecting all other powerups. After collecting the island's green heart, the island disappears and reappears with the original collectibles elsewhere. 
 
 ## Bars
 1. Health Bar: Indicates health of boat. Contains 20 units.
@@ -34,3 +36,11 @@ The game consists of a boat, and three types of enemies and a boss who appears w
 ## Environment
 1. Wind starts blowing at random angles in random intervals, influencing the boat's direction. Rotating against the wind becomes slower and in the direction becomes faster.
 2. 3 Waves are there around the boat, front, middle and rear when it is moving.
+3. An island which contains coins, hearts and boosters. Dissapears after green health is collected and reappears elsewhere/
+
+## Man
+1. Man can move up, down, left, right, ahead and behind using the keys z, x, a, d, z, w and s respectively.
+2. Man cannot collect collectibles that are not on the island. He cannot shoot either, but he does take damage like the boat.
+3. Damage to the man affects the boat's health too.
+4. Switch to man view using 'm' .
+5. After collecting all collectibles on the island, a green heart appears which restores health of man/boat completely.

@@ -86,6 +86,11 @@ void createEnemy1Bullet();
 void createEnemy3Bullet();
 void createBossBullet();
 void addCoinsToBar();
+void createIsland();
+void createiSpeedup(int x, int y);
+void createRediHeart(int x, int y);
+void createGreeniHeart(int x, int y);
+void createiCoins(int x, int y);
 
 // ---- Colors ----
 extern const color_t COLOR_RED;
@@ -106,5 +111,6 @@ extern const color_t COLOR_OLIVE;
 extern const color_t COLOR_PURPLE;
 extern const color_t COLOR_YELLOW;
 extern const color_t COLOR_BRONZE;
+extern const color_t COLOR_DARKGREEN;
 
 #endif

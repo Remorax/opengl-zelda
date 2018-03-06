@@ -18,3 +18,4 @@ const color_t COLOR_OLIVE = {51,51,0};
 const color_t COLOR_DARKVIOLET = {51,0,102};
 const color_t COLOR_BRONZE = {205, 127, 50};
 const color_t COLOR_PURPLE = {51,0,25};
+const color_t COLOR_DARKGREEN = {0,100,0};
