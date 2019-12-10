@@ -1,11 +1,13 @@
-Graphics Boilerplate Code
-=========================
+# README
 
-This is boilerplate code for the assignments which might be helpful.
+A 3D Legend of Zelda game made with OpenGL.
 
+## Game Details
 
-License
--------
-The MIT License https://meghprkh.mit-license.org/
+Refer [this](https://github.com/Remorax/opengl-zelda/blob/master/src/README.md) doc for a detailed explanation of all the game features.
 
-Copyright &copy; 2018 Megh Parikh <meghprkh@gmail.com>
+## How to run
+
+1. Run `g++ main.cpp` to compile the code.
+2. Run `./a.out` to play the game.
+
